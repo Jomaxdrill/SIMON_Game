@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game!!</title>
+    <style>
+    body {
+        margin: 0;
+        background: #dedede;
+        display: flex;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .gameboard {
+        height: 100vh;
+        width: 100vh;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        max-height: 60vh;
+        max-width: 60vh;
+      }
+
+      .color {
+        width: 50%;
+        height: 50%;
+        display: inline-block;
+      }
+
+      .left {
+        float: left;
+      }
+
+      .right {
+        float: left;
+      }
+
+      .celeste {
+        background: #22a6b3;
+      }
+
+      .celeste.light {
+        background: #7ed6df;
+      }
+
+      .violeta {
+        background: #be2edd;
+      }
+
+      .violeta.light {
+        background: #e056fd;
+      }
+
+      .naranja {
+        background: #f0932b;
+      }
+
+      .naranja.light {
+        background: #ffbe76;
+      }
+
+      .verde {
+        background: #6ab04c;
+      }
+
+      .verde.light {
+        background: #badc58;
+      }
+
+      .btn-start {
+        width: 400px;
+        height: 100px;
+        background: #ecf0f1;
+        color: #2c3e50;
+        font-size: 2.5rem;
+        position: absolute;
+        top: calc(50% - 50px);
+        left: calc(50% - 200px);
+      }
+
+      .hide {
+        display: none;
+      }
+      * {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+    </style>
+</head>
+<body>
+    <div class="gameboard">
+        <div id="celeste" class="color celeste left" data-color="celeste"></div>
+        <div id="violeta" class="color violeta right" data-color="violeta"></div>
+        <div id="naranja" class="color naranja left" data-color="naranja"></div>
+        <div id="verde" class="color verde right" data-color="verde"></div>
+        <button id="btnEmpezar" class="btn-start" onclick="gameBegin()">Empezar a jugar!</button>
+    </div>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        const celeste=document.getElementById('celeste')
+        const violeta=document.getElementById('violeta')
+        const naranja=document.getElementById('naranja')
+        const verde=document.getElementById('verde')
+        const beginGame=document.getElementById('btnEmpezar')
+        const ULTIMO_NIVEL = 10
+        function gameBegin(){
+            //alert('Empiece el juego')
+            window.game=new playGame()
+        }
+        class playGame{
+            constructor(){
+                //
+                this.initialize=this.initialize.bind(this)
+                this.initialize()
+                this.generateSequence()
+                setTimeout(this.nextLevel , 500);
+            }
+            initialize(){
+              this.nextLevel=this.nextLevel.bind(this)//asi la funcion next level siempre estará atada al juego y no window por default
+              this.selectColor=this.selectColor.bind(this)
+              this.toggleBtnbegin()
+              this.nivel=1
+              this.colors={
+                    //javascript solito va reconocer key:value si en nombre es igual 
+                    celeste,
+                    violeta,
+                    naranja,
+                    verde
+                }
+            }
+            toggleBtnbegin(){
+              if(beginGame.classList.contains('hide')){
+                beginGame.classList.remove('hide')
+              }else{
+                beginGame.classList.add('hide')
+              }
+              
+            }
+            generateSequence(){
+                this.sequence= new Array(ULTIMO_NIVEL).fill(0).map(n=>Math.floor(Math.random()*4))
+            }
+            nextLevel(){
+              this.subelevel=0
+              this.iluminateSequence()
+              this.addEventsonclick()
+            }
+            transformNumtoColor(number){
+              switch(number){
+                case 0: 
+                return 'celeste'
+                case 1: 
+                return 'violeta'
+                case 2: 
+                return 'naranja'
+                case 3: 
+                return 'verde'
+
+              }
+            }
+            transformColortoNum(color){
+              switch(color){
+                case 'celeste': 
+                return 0
+                case 'violeta': 
+                return 1 
+                case 'naranja': 
+                return 2
+                case 'verde': 
+                return 3
+
+              }
+            }
+            iluminateSequence(){
+              for(let i =0;i<this.nivel;i++){
+                const color=this.transformNumtoColor(this.sequence[i])
+              //this.iluminateColor(color);
+              setTimeout(() =>this.iluminateColor(color),1000*i);
+              }
+            } 
+            iluminateColor(color){
+              this.colors[color].classList.add('light');
+              setTimeout(() => this.turnoffcolor(color),350);
+            }
+
+            turnoffcolor(color){
+              this.colors[color].classList.remove('light');
+            }
+           
+            addEventsonclick(){
+              //this.colors.celeste.addEventListener('click',this.selectColor.bind(this))//manejador de eventos decimos el evento y que funcion ejecutar
+              //por que carajos un this dentro de un this?? sucede que this en un event handler es en sí el elemento html que acciona el evento 
+              //nosotros queremos que this siga refiriendose a play game ,la clase que contiene todo esto entonces para eso está bind
+              //arriba ya hemos agregado eso desde la inicializacion
+              this.colors.celeste.addEventListener('click',this.selectColor)
+              this.colors.violeta.addEventListener('click',this.selectColor)
+              this.colors.naranja.addEventListener('click',this.selectColor)
+              this.colors.verde.addEventListener('click',this.selectColor)
+            }
+            deleteEventsClick(){
+              this.colors.celeste.removeEventListener('click',this.selectColor)//manejador de eventos decimos el evento y que funcion ejecutar
+              this.colors.violeta.removeEventListener('click',this.selectColor)
+              this.colors.naranja.removeEventListener('click',this.selectColor)
+              this.colors.verde.removeEventListener('click',this.selectColor)
+            }
+            selectColor(ev){
+              const namecolor=ev.target.dataset.color
+              const numcolor=this.transformColortoNum(namecolor)
+              this.iluminateColor(namecolor)
+              if(numcolor===this.sequence[this.subelevel]){
+                this.subelevel++
+                if(this.subelevel===this.nivel){
+                 this.nivel++
+                 this.deleteEventsClick()
+                 if(this.nivel===(ULTIMO_NIVEL+1)){
+                  this.youWin()
+                 }else{
+                   setTimeout(this.nextLevel, 1500); //no estamos invocando la funcion ,la estamos referenciando,estamos diciendole que funcion llamar
+                 }
+
+                }
+              }else{
+               //alert('PERDISTE')
+               this.youLost()
+              }
+
+            }
+
+            youWin(){
+            swal("Good job!", "You win", "success")
+            .then(this.initialize)
+            
+            }  
+            youLost(){
+            swal("Sorry Game Over!", "You Lost", "error")
+            .then(()=>{
+              this.deleteEventsClick()
+              this.initialize()
+            })
+
+            }  
+           
+         
+      }
+        
+    </script>
+  
+</body>
+</html>
